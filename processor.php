@@ -329,7 +329,11 @@ class block_badgeawarder_processor {
 
         if ($this->mode == self::MODE_CREATE_NEW || $this->mode == self::MODE_CREATE_ALL) {
             $user = new stdClass();
-            $user->username = $data['email'];
+            // Skillman - generate username by pattern:
+            //$user->username = $data['email'];
+            $emailarr=explode("@", $data['email']);
+            $user->username = $emailarr[0] . '-' . bin2hex(random_bytes(4));
+            $user->username = core_user::clean_field($user->username, 'username');
             $user->email = $data['email'];
             $user->firstname = $data['firstname'];
             $user->lastname = $data['lastname'];
