@@ -215,7 +215,23 @@ class block_badgeawarder_processor {
 
         $tracker->finish();
         $tracker->results($awardtotal, $accountscreated, $usersenrolled, $errors);
+
+            // Send user email.
+            $user->badgename = $data['badge'];
+            $user->badgedescription = $badge->description; // Skillman.
+            if ($this->send_email($user)) {
+                if ($user->new) {
+                    $status = get_string('statusemailinvited', 'block_badgeawarder');
+                } else {
+                    $status = get_string('statusemailnotified', 'block_badgeawarder');
+                }
+            } else {
+                $status = get_string('statusemailfailed', 'block_badgeawarder');
+                $tracker->output($this->linenb, false, $status, $data);
+                continue;
+            }
     }
+
 
     /**
      * Enrols an already-resolved recipient if needed, awards the badge, and emails them,
@@ -461,7 +477,7 @@ class block_badgeawarder_processor {
         } else {
             $emailawardtexthtml = get_string('emailawardtextexisting', 'block_badgeawarder', $user);
         }
-
+        
         $emailawardtext = strip_tags($emailawardtexthtml);
 
         return email_to_user($user, $supportuser, $emailawardsubject, $emailawardtext, $emailawardtexthtml);
