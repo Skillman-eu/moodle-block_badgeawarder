@@ -81,7 +81,8 @@ Once completed, the page will display the results of the CSV file upload, includ
 
 ====================================================================
 Skillman adjustments:
-- auto0generate email by pattern (with random characters)
+- badge description added to the user's badge award email
+- auto-generate email by pattern (with random characters)
 - permission to upload csv for non-editing teacher.
-ATTENTION! Permission to upload csv for non-editing teacher might not works! Must be defuned explicitly on the page 
+ATTENTION! Permission to upload csv for non-editing teacher might not works! Must be defined explicitly on the page 
 /admin/roles/manage.php->"Non-editing teacher"->Edit->block/badgeawarder:uploadcsv->"Allow"

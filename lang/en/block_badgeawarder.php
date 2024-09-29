@@ -50,7 +50,8 @@ $string['defaultdelimiter'] = 'Default delimiter';
 $string['defaultencoding'] = 'Default encoding';
 $string['defaultpreviewrows'] = 'Default number of preview rows';
 $string['emailawardsubject'] = 'You have received a badge';
-$string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge.<br>
+$string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge:<br>
+{$a->badgedescription}
 <br>
 To access Moodle, got to: {$a->siteurl}
 <br>
@@ -58,7 +59,8 @@ Your current login information is now:<br>
    username: {$a->username}<br>
    password: {$a->newpassword}<br>
 ';
-$string['emailawardtextexisting'] = 'Congratulations you have received a {$a->badgename} badge.<br>
+$string['emailawardtextexisting'] = 'Congratulations you have received a {$a->badgename} badge:<br>
+{$a->badgedescription}
 <br>
 To access your badge visit {$a->siteurl}
 ';

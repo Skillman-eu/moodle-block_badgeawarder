@@ -257,6 +257,7 @@ class block_badgeawarder_processor {
 
             // Send user email.
             $user->badgename = $data['badge'];
+            $user->badgedescription = $badge->description; // Skillman.
             if ($this->send_email($user)) {
                 if ($user->new) {
                     $status = get_string('statusemailinvited', 'block_badgeawarder');
@@ -399,7 +400,7 @@ class block_badgeawarder_processor {
         } else {
             $emailawardtexthtml = get_string('emailawardtextexisting', 'block_badgeawarder', $user);
         }
-
+        
         $emailawardtext = strip_tags($emailawardtexthtml);
 
         return email_to_user($user, $supportuser, $emailawardsubject, $emailawardtext, $emailawardtexthtml);
