@@ -257,7 +257,16 @@ class block_badgeawarder_processor {
 
             // Send user email.
             $user->badgename = $data['badge'];
-            $user->badgedescription = $badge->description; // Skillman.
+
+            // Skillman - use badge data in user's messages.
+            if (!empty($badge->message)) {
+                $user->badgedescription = $badge->message;
+            } elseif (!empty($badge->description)) {
+                $user->badgedescription = $badge->description;
+            } else {
+                $user->badgedescription = '';
+            }
+
             if ($this->send_email($user)) {
                 if ($user->new) {
                     $status = get_string('statusemailinvited', 'block_badgeawarder');
