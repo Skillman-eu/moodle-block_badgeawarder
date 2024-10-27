@@ -431,11 +431,15 @@ class block_badgeawarder_processor {
      * @param object $user
      * @return bool
      */
-    private function send_email($user) {
+    private function send_email($user): bool {
         global $CFG;
-        $user->siteurl = $CFG->wwwroot;
-        $user->loginurl = $CFG->wwwroot . '/login/index.php';
-        $user->mybadgeurl = $CFG->wwwroot . '/badges/mybadges.php';
+
+        $linkurl = new moodle_url($CFG->wwwroot, []);
+        $user->siteurl = html_writer::link($linkurl, get_string('login'));
+        $linkurl = new moodle_url($CFG->wwwroot . '/login/index.php', []);
+        $user->loginurl = html_writer::link($linkurl, get_string('login'));
+        $linkurl = new moodle_url($CFG->wwwroot . '/badges/mybadges.php', []);
+        $user->mybadgeurl = html_writer::link($linkurl, get_string('managebadges', 'badges'));
 
         $supportuser = core_user::get_support_user();
 
