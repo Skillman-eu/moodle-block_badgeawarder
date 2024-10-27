@@ -403,7 +403,7 @@ class block_badgeawarder_processor {
         $user->siteurl = $CFG->wwwroot;
         $supportuser = core_user::get_support_user();
 
-        $emailawardsubject = get_string('emailawardsubject', 'block_badgeawarder');
+        $emailawardsubject = get_string('emailawardsubject', 'block_badgeawarder', $user);
         if ($user->new) {
             $emailawardtexthtml = get_string('emailawardtextnew', 'block_badgeawarder', $user);
         } else {

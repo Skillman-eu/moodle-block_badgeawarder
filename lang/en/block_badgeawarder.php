@@ -49,7 +49,7 @@ $string['defaultuploadtype'] = 'Default upload type';
 $string['defaultdelimiter'] = 'Default delimiter';
 $string['defaultencoding'] = 'Default encoding';
 $string['defaultpreviewrows'] = 'Default number of preview rows';
-$string['emailawardsubject'] = 'You have received a badge';
+$string['emailawardsubject'] = 'Congratulations! You have received a {$a->badgename} badge';
 $string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge:<br>
 {$a->badgedescription}
 <br>
