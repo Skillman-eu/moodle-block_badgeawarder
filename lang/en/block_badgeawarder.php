@@ -53,16 +53,20 @@ $string['emailawardsubject'] = 'Congratulations! You have received a {$a->badgen
 $string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge:<br>
 {$a->badgedescription}
 <br>
-To access Moodle, got to: {$a->siteurl}
+To access the Badge Management Platform, log on to: {$a->loginurl}<br>
 <br>
-Your current login information is now:<br>
-   username: {$a->username}<br>
-   password: {$a->newpassword}<br>
+<strong>Your current login credentials are:</strong><br>
+<strong>username:</strong> {$a->username}<br>
+<strong>password:</strong> {$a->newpassword}<br>
+<br>
+To view and download your new badge, once logged in visit My badges page: {$a->mybadgeurl}.
 ';
 $string['emailawardtextexisting'] = 'Congratulations you have received a {$a->badgename} badge:<br>
 {$a->badgedescription}
 <br>
-To access your badge visit {$a->siteurl}
+To access the Badge Management Platform, log on to: {$a->loginurl}<br>
+<br>
+To view and download your new badge, once logged in visit My badges page: {$a->mybadgeurl}.
 ';
 $string['encoding'] = 'Encoding';
 $string['enrolment'] = 'Enrolment';

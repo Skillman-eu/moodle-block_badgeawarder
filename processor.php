@@ -401,6 +401,9 @@ class block_badgeawarder_processor {
     private function send_email($user) {
         global $CFG;
         $user->siteurl = $CFG->wwwroot;
+        $user->loginurl = $CFG->wwwroot . '/login/index.php';
+        $user->mybadgeurl = $CFG->wwwroot . '/badges/mybadges.php';
+
         $supportuser = core_user::get_support_user();
 
         $emailawardsubject = get_string('emailawardsubject', 'block_badgeawarder', $user);
