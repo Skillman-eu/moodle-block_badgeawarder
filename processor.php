@@ -398,11 +398,19 @@ class block_badgeawarder_processor {
         $this->enrolinstance = $DB->get_record('enrol', array('courseid' => $this->courseid, 'enrol' => 'manual'), '*', MUST_EXIST);
     }
 
-    private function send_email($user) {
+    /**
+     * @throws coding_exception
+     * @throws moodle_exception
+     */
+    private function send_email($user): bool {
         global $CFG;
-        $user->siteurl = $CFG->wwwroot;
-        $user->loginurl = $CFG->wwwroot . '/login/index.php';
-        $user->mybadgeurl = $CFG->wwwroot . '/badges/mybadges.php';
+
+        $linkurl = new moodle_url($CFG->wwwroot, []);
+        $user->siteurl = html_writer::link($linkurl, get_string('login'));
+        $linkurl = new moodle_url($CFG->wwwroot . '/login/index.php', []);
+        $user->loginurl = html_writer::link($linkurl, get_string('login'));
+        $linkurl = new moodle_url($CFG->wwwroot . '/badges/mybadges.php', []);
+        $user->mybadgeurl = html_writer::link($linkurl, get_string('managebadges', 'badges'));
 
         $supportuser = core_user::get_support_user();
 
