@@ -49,12 +49,21 @@ $string['defaultuploadtype'] = 'Default upload type';
 $string['emailawardsubject'] = 'Congratulations! You have received a {$a->badgename} badge';
 $string['emailawardtextexisting'] = 'Congratulations you have received a {$a->badgename} badge:<br>
 {$a->badgedescription}
-
+<br>
+To access the Badge Management Platform, log on to: {$a->loginurl}<br>
+<br>
+<strong>Your current login credentials are:</strong><br>
+<strong>username:</strong> {$a->username}<br>
+<strong>password:</strong> {$a->newpassword}<br>
+<br>
+To view and download your new badge, once logged in visit My badges page: {$a->mybadgeurl}.
 ';
 $string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge:<br>
 {$a->badgedescription}
 <br>
-To access your badge visit {$a->siteurl}
+To access the Badge Management Platform, log on to: {$a->loginurl}<br>
+<br>
+To view and download your new badge, once logged in visit My badges page: {$a->mybadgeurl}.
 <br>
 Your current login information is now:
 <ul>
