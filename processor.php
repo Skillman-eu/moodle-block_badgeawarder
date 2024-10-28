@@ -411,6 +411,14 @@ class block_badgeawarder_processor {
         $user->loginurl = html_writer::link($linkurl, get_string('login'));
         $linkurl = new moodle_url($CFG->wwwroot . '/badges/mybadges.php', []);
         $user->mybadgeurl = html_writer::link($linkurl, get_string('managebadges', 'badges'));
+        // Processing placeholders.
+        if (strpos($user->badgedescription, '%badgename%') !== false) {
+            $user->badgedescription = str_replace('%badgename%', $user->badgename, $user->badgedescription);
+        }
+        if (strpos($user->badgedescription, '%badgelink%') !== false) {
+            // We use mybadgeurl because it is impossible to construct direct badge URL there
+            $user->badgedescription = str_replace('%badgelink%', $user->mybadgeurl, $user->badgedescription);
+        }
 
         $supportuser = core_user::get_support_user();
 
@@ -422,7 +430,7 @@ class block_badgeawarder_processor {
         }
         
         $emailawardtext = strip_tags($emailawardtexthtml);
-
+        ob_start(); var_dump($emailawardsubject); var_dump($emailawardtexthtml); $out = ob_get_clean(); file_put_contents('D:\msg_log.txt', $out);
         return email_to_user($user, $supportuser, $emailawardsubject, $emailawardtext, $emailawardtexthtml);
     }
 
