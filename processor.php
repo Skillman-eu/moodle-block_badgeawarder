@@ -273,7 +273,10 @@ class block_badgeawarder_processor {
             } else {
                 $user->badgedescription = '';
             }
-            $badge->attachment
+            $user->badgeid = $badge->id;
+            $user->badgeattachment = $badge->attachment;
+            $user->badgecourseid =  $badge->courseid;
+
             if ($this->send_email($user)) {
                 if ($user->new) {
                     $status = get_string('statusemailinvited', 'block_badgeawarder');
@@ -459,9 +462,33 @@ class block_badgeawarder_processor {
         $message->fullmessage = html_to_text($emailawardtexthtml);
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = $emailawardtexthtml;
+        if ($user->badgeattachment) {
+            $badgefile = $this->generate_badge_attachment($user->badgeid, $user->id, $user->badgecourseid);
+            $message->attachment = $badgefile;
+            //$attachmentpath = $badgefile->copy_content_to_temp();
+            $message->attachname = $badgefile->get_filename();
+        }
+        //ob_start(); var_dump($badgefile);var_dump($message); $out = ob_get_clean(); file_put_contents('D:\msg_log.txt', $out);
         return message_send($message);
     }
 
+    /**
+     * @param int $badgeid
+     * @param int $userid
+     * @param int $badgecourseid
+     * @return ?stored_file
+     * @throws coding_exception
+     * @throws dml_exception
+     */
+    private function generate_badge_attachment(int $badgeid, int $userid, int $badgecourseid): ?stored_file {
+        $fs = get_file_storage();
+        $file = $fs->get_file(context_course::instance($badgecourseid)->id, 'badges', 'badgeimage', $badgeid, '/', 'f1.png');
+        if (empty($file)) {
+            return null;
+        } else {
+            return $file;
+        }
+    }
 
     private function enrol_user($user) {
         $this->manualenrolment->enrol_user($this->enrolinstance, $user->id, 5);
