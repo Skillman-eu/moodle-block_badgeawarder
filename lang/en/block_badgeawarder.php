@@ -50,23 +50,23 @@ $string['defaultdelimiter'] = 'Default delimiter';
 $string['defaultencoding'] = 'Default encoding';
 $string['defaultpreviewrows'] = 'Default number of preview rows';
 $string['emailawardsubject'] = 'Congratulations! You have received a {$a->badgename} badge';
-$string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge:<br>
+$string['emailawardtextnew'] = '
 {$a->badgedescription}
 <br>
-To access the Badge Management Platform, log on to: {$a->loginurl}<br>
+To access the Badge Management Platform, {$a->loginurl}<br>
 <br>
 <strong>Your current login credentials are:</strong><br>
 <strong>username:</strong> {$a->username}<br>
 <strong>password:</strong> {$a->newpassword}<br>
 <br>
-To view and download your new badge, once logged in visit My badges page: {$a->mybadgeurl}.
+To view and download your new badge, once logged in visit the {$a->mybadgeurl} page.
 ';
-$string['emailawardtextexisting'] = 'Congratulations you have received a {$a->badgename} badge:<br>
+$string['emailawardtextexisting'] = '
 {$a->badgedescription}
 <br>
-To access the Badge Management Platform, log on to: {$a->loginurl}<br>
+To access the Badge Management Platform, {$a->loginurl}<br>
 <br>
-To view and download your new badge, once logged in visit My badges page: {$a->mybadgeurl}.
+To view and download your new badge, once logged in visit the {$a->mybadgeurl} page.
 ';
 $string['encoding'] = 'Encoding';
 $string['enrolment'] = 'Enrolment';

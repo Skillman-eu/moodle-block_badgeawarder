@@ -22,6 +22,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+use core\message\message;
+
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/csvlib.class.php');
 require_once($CFG->dirroot .'/badges/lib/awardlib.php');
@@ -259,6 +261,11 @@ class block_badgeawarder_processor {
             $user->badgename = $data['badge'];
 
             // Skillman - use badge data in user's messages.
+            if (!empty($badge->messagesubject)) {
+                $user->badgesubject = $badge->messagesubject;
+            } else {
+                $user->badgesubject = '';
+            }
             if (!empty($badge->message)) {
                 $user->badgedescription = $badge->message;
             } elseif (!empty($badge->description)) {
@@ -266,7 +273,7 @@ class block_badgeawarder_processor {
             } else {
                 $user->badgedescription = '';
             }
-
+            $badge->attachment
             if ($this->send_email($user)) {
                 if ($user->new) {
                     $status = get_string('statusemailinvited', 'block_badgeawarder');
@@ -422,16 +429,37 @@ class block_badgeawarder_processor {
 
         $supportuser = core_user::get_support_user();
 
-        $emailawardsubject = get_string('emailawardsubject', 'block_badgeawarder', $user);
+        // Skillman: use global badge subject if available
+        if (empty($user->badgesubject)) {
+            $emailawardsubject = get_string('emailawardsubject', 'block_badgeawarder', $user);
+        } else {
+            if (strpos($user->badgesubject, '%badgename%') !== false) {
+                $user->badgesubject = str_replace('%badgename%', $user->badgename, $user->badgesubject);
+            }
+            $emailawardsubject = $user->badgesubject;
+        }
         if ($user->new) {
             $emailawardtexthtml = get_string('emailawardtextnew', 'block_badgeawarder', $user);
         } else {
             $emailawardtexthtml = get_string('emailawardtextexisting', 'block_badgeawarder', $user);
         }
-        
-        $emailawardtext = strip_tags($emailawardtexthtml);
-        ob_start(); var_dump($emailawardsubject); var_dump($emailawardtexthtml); $out = ob_get_clean(); file_put_contents('D:\msg_log.txt', $out);
-        return email_to_user($user, $supportuser, $emailawardsubject, $emailawardtext, $emailawardtexthtml);
+
+        // Skillman: add default message body if no description.
+        if (empty($user->badgedescription)) {
+            $emailawardtexthtml = get_string('emailawardsubject', 'block_badgeawarder', $user) . $emailawardtexthtml;
+        }
+
+        //ob_start(); var_dump($emailawardsubject); var_dump($emailawardtexthtml); $out = ob_get_clean(); file_put_contents('D:\msg_log.txt', $out);
+        $message = new message();
+        $message->component = 'block_badgeawarder';
+        $message->name = 'badge_awarding_message';
+        $message->userfrom = $supportuser;
+        $message->userto = $user;
+        $message->subject = $emailawardsubject;
+        $message->fullmessage = html_to_text($emailawardtexthtml);
+        $message->fullmessageformat = FORMAT_HTML;
+        $message->fullmessagehtml = $emailawardtexthtml;
+        return message_send($message);
     }
 
 
