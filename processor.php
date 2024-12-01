@@ -276,6 +276,7 @@ class block_badgeawarder_processor {
             $user->badgeid = $badge->id;
             $user->badgeattachment = $badge->attachment;
             $user->badgecourseid =  $badge->courseid;
+            $user->badgehash = $DB->get_field('badge_issued', 'uniquehash', ['badgeid' => $badge->id, 'userid' => $user->id], MUST_EXIST);
 
             if ($this->send_email($user)) {
                 if ($user->new) {
@@ -413,7 +414,7 @@ class block_badgeawarder_processor {
      * @throws moodle_exception
      */
     private function send_email($user): bool {
-        global $CFG;
+        global $CFG, $DB;
 
         $linkurl = new moodle_url($CFG->wwwroot, []);
         $user->siteurl = html_writer::link($linkurl, get_string('login'));
@@ -421,13 +422,15 @@ class block_badgeawarder_processor {
         $user->loginurl = html_writer::link($linkurl, get_string('login'));
         $linkurl = new moodle_url($CFG->wwwroot . '/badges/mybadges.php', []);
         $user->mybadgeurl = html_writer::link($linkurl, get_string('managebadges', 'badges'));
+        $linkurl = new moodle_url($CFG->wwwroot . '/badges/badge.php', ['hash' => $user->badgehash]);
+        $user->currbadgeurl = html_writer::link($linkurl, $user->badgename);
         // Processing placeholders.
         if (strpos($user->badgedescription, '%badgename%') !== false) {
             $user->badgedescription = str_replace('%badgename%', $user->badgename, $user->badgedescription);
         }
         if (strpos($user->badgedescription, '%badgelink%') !== false) {
             // We use mybadgeurl because it is impossible to construct direct badge URL there
-            $user->badgedescription = str_replace('%badgelink%', $user->mybadgeurl, $user->badgedescription);
+            $user->badgedescription = str_replace('%badgelink%', $user->currbadgeurl, $user->badgedescription);
         }
 
         $supportuser = core_user::get_support_user();
