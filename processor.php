@@ -485,7 +485,7 @@ class block_badgeawarder_processor {
      */
     private function generate_badge_attachment(int $badgeid, int $userid, int $badgecourseid): ?stored_file {
         $fs = get_file_storage();
-        $file = $fs->get_file(context_course::instance($badgecourseid)->id, 'badges', 'badgeimage', $badgeid, '/', 'f1.png');
+        $file = $fs->get_file(context_course::instance($badgecourseid)->id, 'badges', 'badgeimage', $badgeid, '/', 'f3.png');
         if (empty($file)) {
             return null;
         } else {
