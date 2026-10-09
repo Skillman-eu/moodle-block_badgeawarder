@@ -66,3 +66,11 @@ Once completed, the page will display the results of the CSV file upload, includ
 2. Number of accounts created.
 3. Existing Users Enrolled.
 4. Any award errors.
+
+====================================================================
+Skillman adjustments:
+- badge description added to the user's badge award email
+- auto-generate email by pattern (with random characters)
+- permission to upload csv for non-editing teacher.
+ATTENTION! Permission to upload csv for non-editing teacher might not works! Must be defined explicitly on the page 
+/admin/roles/manage.php->"Non-editing teacher"->Edit->block/badgeawarder:uploadcsv->"Allow"
