@@ -365,7 +365,7 @@ final class processor_test extends \advanced_testcase {
     public function test_execute_emails_new_user_with_credentials(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
-        $sink = $this->redirectEmails();
+        $sink = $this->redirectMessages();
 
         $course = $this->getDataGenerator()->create_course();
         $badge = $this->make_course_badge($course);
@@ -378,15 +378,16 @@ final class processor_test extends \advanced_testcase {
         $sink->close();
 
         $this->assertCount(1, $messages);
-        $this->assertSame(get_string('emailawardsubject', 'block_badgeawarder'), $messages[0]->subject);
-        $this->assertStringContainsStringIgnoringCase('username', $messages[0]->body);
-        $this->assertStringContainsStringIgnoringCase('password', $messages[0]->body);
+        $this->assertSame(get_string('emailawardsubject', 'block_badgeawarder',
+            (object) ['badgename' => $badge->name]), $messages[0]->subject);
+        $this->assertStringContainsStringIgnoringCase('username', $messages[0]->fullmessage);
+        $this->assertStringContainsStringIgnoringCase('password', $messages[0]->fullmessage);
     }
 
     public function test_execute_notifies_existing_user_without_credentials(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
-        $sink = $this->redirectEmails();
+        $sink = $this->redirectMessages();
 
         $course = $this->getDataGenerator()->create_course();
         $badge = $this->make_course_badge($course);
@@ -400,8 +401,53 @@ final class processor_test extends \advanced_testcase {
         $sink->close();
 
         $this->assertCount(1, $messages);
-        $this->assertStringNotContainsStringIgnoringCase('username', $messages[0]->body);
-        $this->assertStringNotContainsStringIgnoringCase('password', $messages[0]->body);
+        $this->assertStringNotContainsStringIgnoringCase('username', $messages[0]->fullmessage);
+        $this->assertStringNotContainsStringIgnoringCase('password', $messages[0]->fullmessage);
+    }
+
+    public function test_execute_sends_each_recipient_their_badge_details_without_an_image(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $sink = $this->redirectMessages();
+        $course = $this->getDataGenerator()->create_course();
+        $badge = $this->make_course_badge($course, [
+            'messagesubject' => 'Award: %badgename%',
+            'message' => 'See %badgelink% for %badgename%.',
+            'attachment' => 1,
+        ]);
+        $first = $this->getDataGenerator()->create_user(['email' => 'first@example.com']);
+        $second = $this->getDataGenerator()->create_user(['email' => 'second@example.com']);
+        $csv = $this->basic_csv($first->email, $badge->name)
+            . "Jane,Doe,{$second->email},{$badge->name}\n";
+        $processor = $this->make_processor($this->make_reader($csv), $course->id,
+            \block_badgeawarder_processor::MODE_UPDATE_ONLY);
+        $processor->execute(new fake_tracker());
+        $messages = $sink->get_messages();
+        $this->assertCount(2, $messages);
+        foreach ([$first, $second] as $index => $user) {
+            $hash = $DB->get_field('badge_issued', 'uniquehash',
+                ['badgeid' => $badge->id, 'userid' => $user->id], MUST_EXIST);
+            $this->assertEquals($user->id, $messages[$index]->useridto);
+            $this->assertSame('Award: ' . $badge->name, $messages[$index]->subject);
+            $this->assertStringContainsString($hash, $messages[$index]->fullmessagehtml);
+            $this->assertStringNotContainsString('%badgename%', $messages[$index]->fullmessagehtml);
+        }
+        $sink->close();
+    }
+
+    public function test_duplicate_badge_names_are_rejected(): void {
+        $this->resetAfterTest();
+        $course = $this->getDataGenerator()->create_course();
+        $this->make_course_badge($course);
+        $this->make_course_badge($course);
+        $processor = $this->make_processor($this->make_reader($this->basic_csv('jane@example.com', 'Test badge')),
+            $course->id, \block_badgeawarder_processor::MODE_CREATE_ALL);
+        $method = new \ReflectionMethod($processor, 'get_badge');
+        $method->setAccessible(true);
+        $this->expectException(\moodle_exception::class);
+        $this->expectExceptionMessage(get_string('ambiguousbadgename', 'block_badgeawarder', 'Test badge'));
+        $method->invoke($processor, 'Test badge');
     }
 
     /**

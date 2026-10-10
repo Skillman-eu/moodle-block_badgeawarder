@@ -14,11 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-require_once($CFG->libdir . '/csvlib.class.php');
-require_once($CFG->dirroot . '/badges/lib/awardlib.php');
-require_once($CFG->dirroot . '/user/lib.php');
-
 /**
  * File containing processor class.
  *
@@ -32,6 +27,7 @@ use core\message\message;
 defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir . '/csvlib.class.php');
 require_once($CFG->dirroot .'/badges/lib/awardlib.php');
+require_once($CFG->dirroot . '/user/lib.php');
 
 class block_badgeawarder_processor {
     /**
@@ -63,10 +59,10 @@ class block_badgeawarder_processor {
     protected $mode;
 
     /** @var string defaultcity for new user records. */
-    protected $defaultcity;
+    protected $defaultcity = '';
 
     /** @var string defaultcountry for new user records. */
-    protected $defaultcountry;
+    protected $defaultcountry = '';
 
     /** @var string institution of the user running the import, copied onto newly created accounts. */
     protected $institution;
@@ -130,7 +126,7 @@ class block_badgeawarder_processor {
             $this->defaultcity = $options->city;
         }
         if (isset($options->country)) {
-            if ($this->defaultcountry === '0') {
+            if ((string) $options->country === '0') {
                 $this->defaultcountry = '';
             } else {
                 $this->defaultcountry = $options->country;
@@ -222,41 +218,7 @@ class block_badgeawarder_processor {
 
         $tracker->finish();
         $tracker->results($awardtotal, $accountscreated, $usersenrolled, $errors);
-
-            // Send user email.
-            $user->badgename = $data['badge'];
-
-            // Skillman - use badge data in user's messages.
-            if (!empty($badge->messagesubject)) {
-                $user->badgesubject = $badge->messagesubject;
-            } else {
-                $user->badgesubject = '';
-            }
-            if (!empty($badge->message)) {
-                $user->badgedescription = $badge->message;
-            } elseif (!empty($badge->description)) {
-                $user->badgedescription = $badge->description;
-            } else {
-                $user->badgedescription = '';
-            }
-            $user->badgeid = $badge->id;
-            $user->badgeattachment = $badge->attachment;
-            $user->badgecourseid =  $badge->courseid;
-            $user->badgehash = $DB->get_field('badge_issued', 'uniquehash', ['badgeid' => $badge->id, 'userid' => $user->id], MUST_EXIST);
-
-            if ($this->send_email($user)) {
-                if ($user->new) {
-                    $status = get_string('statusemailinvited', 'block_badgeawarder');
-                } else {
-                    $status = get_string('statusemailnotified', 'block_badgeawarder');
-                }
-            } else {
-                $status = get_string('statusemailfailed', 'block_badgeawarder');
-                $tracker->output($this->linenb, false, $status, $data);
-                continue;
-            }
     }
-
 
     /**
      * Enrols an already-resolved recipient if needed, awards the badge, and emails them,
@@ -290,7 +252,26 @@ class block_badgeawarder_processor {
         $teacher = $DB->get_record('role', ['archetype' => 'teacher']);
         process_manual_award($user->id, $USER->id, $teacher->id, $badge->id);
 
+        // Send user email.
         $user->badgename = $data['badge'];
+
+        // Skillman - use badge data in user's messages.
+        if (!empty($badge->messagesubject)) {
+            $user->badgesubject = $badge->messagesubject;
+        } else {
+            $user->badgesubject = '';
+        }
+        if (!empty($badge->message)) {
+            $user->badgedescription = $badge->message;
+        } elseif (!empty($badge->description)) {
+            $user->badgedescription = $badge->description;
+        } else {
+            $user->badgedescription = '';
+        }
+        $user->badgeid = $badge->id;
+        $user->badgeattachment = $badge->attachment;
+        $user->badgecourseid =  $badge->courseid;
+        $user->badgehash = $DB->get_field('badge_issued', 'uniquehash', ['badgeid' => $badge->id, 'userid' => $user->id], MUST_EXIST);
         if (!$this->send_email($user)) {
             return [get_string('statusemailfailed', 'block_badgeawarder'), false, $enrolled, true];
         }
@@ -360,7 +341,13 @@ class block_badgeawarder_processor {
         }
         if (isset($this->badges[$name])) {
             return $this->badges[$name];
-        } else if ($badge = $DB->get_record('badge', ['name' => $name, 'courseid' => $this->courseid])) {
+        }
+        // Moodle 4.5 permits duplicate badge names. Never select an arbitrary badge.
+        $matches = $DB->get_records('badge', ['name' => $name, 'courseid' => $this->courseid], '', 'id', 0, 2);
+        if (count($matches) > 1) {
+            throw new moodle_exception('ambiguousbadgename', 'block_badgeawarder', '', $name);
+        }
+        if ($badge = reset($matches)) {
             $newbadge = new badge($badge->id);
             $this->badges[$name] = $newbadge;
             return $this->badges[$name];
@@ -543,14 +530,18 @@ class block_badgeawarder_processor {
         $message->fullmessage = html_to_text($emailawardtexthtml);
         $message->fullmessageformat = FORMAT_HTML;
         $message->fullmessagehtml = $emailawardtexthtml;
+        $message->smallmessage = $emailawardsubject;
+        $message->notification = 1;
+        $message->courseid = $user->badgecourseid;
         if ($user->badgeattachment) {
             $badgefile = $this->generate_badge_attachment($user->badgeid, $user->id, $user->badgecourseid);
-            $message->attachment = $badgefile;
-            //$attachmentpath = $badgefile->copy_content_to_temp();
-            $message->attachname = $badgefile->get_filename();
+            if ($badgefile !== null) {
+                $message->attachment = $badgefile;
+                $message->attachname = $badgefile->get_filename();
+            }
         }
         //ob_start(); var_dump($badgefile);var_dump($message); $out = ob_get_clean(); file_put_contents('D:\msg_log.txt', $out);
-        return message_send($message);
+        return message_send($message) !== false;
     }
 
     /**

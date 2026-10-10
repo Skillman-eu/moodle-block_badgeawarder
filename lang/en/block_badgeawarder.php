@@ -52,10 +52,6 @@ $string['emailawardtextexisting'] = 'Congratulations you have received a {$a->ba
 <br>
 To access the Badge Management Platform, {$a->loginurl}<br>
 <br>
-<strong>Your current login credentials are:</strong><br>
-<strong>username:</strong> {$a->username}<br>
-<strong>password:</strong> {$a->newpassword}<br>
-<br>
 To view and download your new badge, once logged in visit the {$a->mybadgeurl} page.
 ';
 $string['emailawardtextnew'] = 'Congratulations you have received a {$a->badgename} badge:<br>
@@ -76,6 +72,8 @@ $string['iconerror'] = 'Error';
 $string['iconsuccess'] = 'Success';
 $string['importoptions'] = 'Import options';
 $string['mode'] = 'Upload mode';
+$string['messageprovider:badge_awarding_message'] = 'Badge award notification';
+$string['ambiguousbadgename'] = 'More than one badge in this course is named "{$a}". Give each badge a unique name before importing the CSV.';
 $string['mode_help'] = 'This allows you to specify if badges can be created and/or updated.';
 $string['nothingtodo'] = 'There are no users in the CSV file that can be awarded a Badge';
 $string['nothingtodobutton'] = 'Go Back';
