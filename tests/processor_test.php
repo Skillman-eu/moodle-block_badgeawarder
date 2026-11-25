@@ -33,6 +33,79 @@ require_once($CFG->dirroot . '/blocks/badgeawarder/tests/fixtures/fake_tracker.p
  * @covers     \block_badgeawarder_processor
  */
 final class processor_test extends \advanced_testcase {
+    /** @return array Malformed rows that must never reach account creation. */
+    public static function incomplete_rows_provider(): array {
+        return [
+            'missing email and badge' => ['Jane,Doe'],
+            'missing badge' => ['Jane,Doe,jane@example.com'],
+            'empty email' => ['Jane,Doe,,Test badge'],
+            'empty first name' => [',Doe,jane@example.com,Test badge'],
+        ];
+    }
+
+    /**
+     * @dataProvider incomplete_rows_provider
+     * @param string $row Malformed CSV row.
+     */
+    public function test_incomplete_rows_are_safe_in_preview_and_execution(string $row): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $course = $this->getDataGenerator()->create_course();
+        $this->make_course_badge($course);
+        $csv = "firstname,lastname,email,badge\n{$row}\n";
+        $processor = $this->make_processor($this->make_reader($csv), $course->id,
+            \block_badgeawarder_processor::MODE_CREATE_ALL);
+        ob_start();
+        try {
+            $processor->preview(10);
+            $html = ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+        $this->assertStringContainsString(get_string('statusmissingfields', 'block_badgeawarder'), $html);
+        $this->assertTrue($processor->nothingtodo);
+        $before = $DB->count_records('user');
+        $processor->reset();
+        $tracker = new fake_tracker();
+        $processor->execute($tracker);
+        $this->assertSame(get_string('statusmissingfields', 'block_badgeawarder'), $tracker->status_for(1));
+        $this->assertSame($before, $DB->count_records('user'));
+        $this->assertSame(0, $DB->count_records('badge_issued'));
+        $this->assertSame(1, $tracker->totals['errors']);
+    }
+
+    public function test_parse_line_normalizes_missing_and_null_cells(): void {
+        $this->resetAfterTest();
+        $processor = $this->make_processor($this->make_reader($this->basic_csv('jane@example.com', 'Test badge')),
+            1, \block_badgeawarder_processor::MODE_CREATE_ALL);
+        $method = new \ReflectionMethod($processor, 'parse_line');
+        $method->setAccessible(true);
+        $this->assertSame(['firstname' => 'Jane', 'lastname' => '', 'email' => '', 'badge' => ''],
+            $method->invoke($processor, ['Jane', null]));
+        $this->assertSame(['firstname' => 'Jane', 'lastname' => 'Doe', 'email' => 'jane@example.com', 'badge' => 'Test badge'],
+            $method->invoke($processor, ['Jane', 'Doe', 'jane@example.com', 'Test badge', 'ignored extra cell']));
+    }
+
+    public function test_valid_row_after_incomplete_row_is_still_awarded(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+        $sink = $this->redirectMessages();
+        $course = $this->getDataGenerator()->create_course();
+        $badge = $this->make_course_badge($course);
+        $user = $this->getDataGenerator()->create_user(['email' => 'valid@example.com']);
+        $csv = "firstname,lastname,email,badge\nJane,Doe\nJane,Doe,{$user->email},{$badge->name}\n";
+        $processor = $this->make_processor($this->make_reader($csv), $course->id,
+            \block_badgeawarder_processor::MODE_UPDATE_ONLY);
+        $tracker = new fake_tracker();
+        $processor->execute($tracker);
+        $this->assertSame(1, $tracker->totals['errors']);
+        $this->assertSame(1, $tracker->totals['awardtotal']);
+        $this->assertTrue($badge->is_issued($user->id));
+        $this->assertCount(1, $sink->get_messages());
+        $sink->close();
+    }
+
     /**
      * Builds a csv_import_reader loaded with the given CSV content, the same way
      * blocks/badgeawarder/badgeawarder.php does before handing it to the processor.

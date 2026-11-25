@@ -68,6 +68,32 @@ Once completed, the page will display the results of the CSV file upload, includ
 4. Any award errors.
 
 ====================================================================
+PHP 8.1 / 8.3 compatibility review (25 November 2026)
+--------------------------------------------------
+The plugin uses PHP 8.1-compatible syntax and APIs. Review against the PHP 8.2
+and 8.3 migration guides found no additional language incompatibilities in the
+normal workflow. Processor properties are declared; per-recipient metadata is
+added to stdClass records, which permit dynamic properties. No PHP 8.3-only
+features or AllowDynamicProperties suppression were introduced.
+
+Incomplete CSV rows are now normalized and rejected before account lookup or
+creation. This prevents undefined array keys and null string arguments under
+PHP 8.1–8.3. Missing-field rows are counted as errors; valid later rows continue.
+
+Validation here: all PHP files pass PHP 8.1 syntax checks and an isolated parser
+smoke check passes with warnings promoted to exceptions. PHP 8.3 is not installed
+locally, and no configured Moodle PHPUnit installation is available; the Moodle
+integration tests have not been run here. Run the plugin suite from a separate
+Moodle 4.5 PHPUnit installation under both PHP 8.1 and PHP 8.3:
+
+```sh
+vendor/bin/phpunit blocks/badgeawarder/tests
+```
+
+References: [PHP 8.2 deprecations](https://www.php.net/manual/en/migration82.deprecated.php),
+[PHP 8.3 incompatible changes](https://www.php.net/manual/en/migration83.incompatible.php),
+[PHP 8.3 deprecations](https://www.php.net/manual/en/migration83.deprecated.php).
+
 Skillman adjustments:
 - badge description added to the user's badge award email
 - auto-generate email by pattern (with random characters)

@@ -191,6 +191,12 @@ class block_badgeawarder_processor {
 
             $data = $this->parse_line($line);
 
+            if (!$this->check_required_fields($data)) {
+                $errors++;
+                $tracker->output($this->linenb, false, get_string('statusmissingfields', 'block_badgeawarder'), $data);
+                continue;
+            }
+
             $skipstatus = $this->resolve_recipient_skip_status($data, $existingemails, $existingusernames);
             if ($skipstatus !== null) {
                 $tracker->output($this->linenb, false, $skipstatus, $data);
@@ -580,7 +586,8 @@ class block_badgeawarder_processor {
      * @return array
      */
     protected function parse_line($line) {
-        $data = [];
+        // Short CSV rows must not leave undefined keys or pass null to string APIs.
+        $data = array_fill_keys($this->columns, '');
         foreach ($line as $keynum => $value) {
             if (!isset($this->columns[$keynum])) {
                 // This should not happen.
@@ -588,7 +595,7 @@ class block_badgeawarder_processor {
             }
 
             $key = $this->columns[$keynum];
-            $data[$key] = $value;
+            $data[$key] = $value ?? '';
         }
         return $data;
     }
@@ -734,7 +741,7 @@ class block_badgeawarder_processor {
         $status = [];
 
         if (!$this->check_required_fields($data)) {
-            $status[] = get_string('statusmissingfields', 'block_badgeawarder');
+            return [get_string('statusmissingfields', 'block_badgeawarder')];
         }
 
         if ($badgestatus = $this->preview_badge_status($data)) {

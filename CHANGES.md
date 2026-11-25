@@ -1,5 +1,13 @@
 Release Notes
 
+##### Release 1.405.03 (Build - 2026112500)
+
+* Reviewed PHP 8.3 compatibility while retaining PHP 8.1 syntax and APIs.
+* Normalize absent/null CSV cells and reject incomplete rows before account lookup
+  or creation, avoiding undefined keys and null arguments to string functions.
+* Apply the same required-field validation in preview and execution.
+* Add PHPUnit regressions for incomplete rows, null cells, and continued processing.
+
 ##### Release 1.405.02 (Build - 2026101001)
 
 * Restore per-recipient custom badge notifications after the migration refactor.
